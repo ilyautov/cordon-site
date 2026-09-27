@@ -24,7 +24,7 @@ for language in ['ru', 'en']:
     source = re.sub(r'(href|src)="(\.[^"#]*)"', lambda m: m[1]+'="../'+m[2]+'"', source)
     source = source.replace('</head>', '<link rel="stylesheet" href="../language.css"><link rel="stylesheet" href="../product.css">\n<link rel="canonical" href="https://cordon.aifrontier.tech/'+language+'/">\n<link rel="alternate" hreflang="ru" href="https://cordon.aifrontier.tech/ru/">\n<link rel="alternate" hreflang="en" href="https://cordon.aifrontier.tech/en/">\n<link rel="alternate" hreflang="x-default" href="https://cordon.aifrontier.tech/">\n<meta property="og:url" content="https://cordon.aifrontier.tech/'+language+'/">\n<meta property="og:locale" content="'+('ru_RU' if language=='ru' else 'en_US')+'">\n</head>')
     github = '<a href="https://github.com/ilyautov/cordon" target="_blank" rel="noopener noreferrer">GitHub ↗</a>'
-    source = source.replace(github, '<div class="masthead-links">'+switch(language)+github+'</div>', 1)
+    source = source.replace(github, '<div class="masthead-links">'+switch(language)+'<a href="https://t.me/gorilla_under_hood" target="_blank" rel="noopener noreferrer">Telegram ↗</a>'+github+'</div>', 1)
     source = source.replace('<span class="nav-progress"', switch(language)+'<span class="nav-progress"',1)
     target = 'en' if language=='ru' else 'ru'
     # The suggestion speaks the proposed language, without stealing keyboard focus.
