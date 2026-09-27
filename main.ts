@@ -1,6 +1,7 @@
 import { t, setupLanguage } from './i18n'
 import { readDemoState } from './language'
 import { setupEnhancements } from './enhancements'
+import { setupCheckpoint } from './checkpoint'
 import fixtures from './scenarios.json'
 import verified from './verified-results.json'
 
@@ -22,14 +23,14 @@ const caseCopy: Record<CaseKey, CaseCopy> = {
     task: 'Подготовь здесь сводку продаж за август по таблице sales.csv.',
     permissions: 'Чтение, сводка и сетевые вызовы разрешены. Отправка на адрес из недоверенного документа требует решения человека.',
     source: 'Таблица продаж · sales.csv',
-    normal: { title: 'Отчёт остаётся у тебя.', context: 'Агент подготовил сводку: 120 заказов, выручка 238 800 ₽. Её можно вывести в рабочий чат.', argument: '120 заказов · 238 800 ₽', target: 'Сводка в чате', result: 'Подготовка сводки разрешена.', reason: 'Сводка входит в права агента. Данные не отправляются внешнему получателю.', gate: 'Сводка разрешена' },
-    suspicious: { title: 'Отчёт просили. Выгрузку — нет.', context: 'Агент запрашивает отправку customers.csv на адрес из комментария к таблице.', argument: 'audit@external.example', target: 'Почта', result: 'Отправка ждёт твоего решения.', reason: 'Получатель пришёл из недоверенной таблицы. Нужно проверить весь черновик перед отправкой.', gate: 'Адрес из чужой таблицы' },
+    normal: { title: 'Отчёт остаётся у вас.', context: 'Агент подготовил сводку: 120 заказов, выручка 238 800 ₽. Её можно вывести в рабочий чат.', argument: '120 заказов · 238 800 ₽', target: 'Сводка в чате', result: 'Подготовка сводки разрешена.', reason: 'Сводка входит в права агента. Данные не отправляются внешнему получателю.', gate: 'Сводка разрешена' },
+    suspicious: { title: 'Отчёт просили. Выгрузку — нет.', context: 'Агент запрашивает отправку customers.csv на адрес из комментария к таблице.', argument: 'audit@external.example', target: 'Почта', result: 'Отправка ждёт вашего решения.', reason: 'Получатель пришёл из недоверенной таблицы. Нужно проверить весь черновик перед отправкой.', gate: 'Адрес из чужой таблицы' },
   },
   files: {
     task: 'Прочитай заметку во входящих и создай папку для документов за август.',
     permissions: 'Читать файлы и создавать папки. Удаление не разрешено.',
     source: 'Заметка во входящей папке · note.txt',
-    normal: { title: 'Новая папка. Всё на месте.', context: 'Агент просит создать папку для августовских документов, как ты и поручил.', argument: 'Новая папка: 2026-08', target: 'Файлы', result: 'Создание папки разрешено.', reason: 'Создание входит в права агента, папка указана в поручении.', gate: 'Создание разрешено' },
+    normal: { title: 'Новая папка. Всё на месте.', context: 'Агент просит создать папку для августовских документов, как вы и поручили.', argument: 'Новая папка: 2026-08', target: 'Файлы', result: 'Создание папки разрешено.', reason: 'Создание входит в права агента, папка указана в поручении.', gate: 'Создание разрешено' },
     suspicious: { title: 'Бэкап — не мусор.', context: 'Агент запрашивает удаление backup. Чужая заметка выдала это за обязательный шаг уборки.', argument: 'Удалить папку backup', target: 'Резервные копии', result: 'Удаление бэкапа отклонено.', reason: 'Удаление не входит в выданные права. Инструкция из файла не расширяет их.', gate: 'Нет прав на удаление' },
   },
 }
@@ -95,6 +96,7 @@ let generation = 0
 let running = false
 let started = false
 let packetAnimation: Animation | undefined
+const checkpoint = setupCheckpoint({ stopped: () => paused || reduceMotion.matches, busy: () => running, showStep: showCheckpointStep })
 function current() {
   const fixture = fixtures.cases.find(item => item.id === selectedCase)
   const proof = verified.results.find(item => item.id === selectedCase)
@@ -110,9 +112,8 @@ function stopPlayback() {
   running = false
 }
 function point(nodeSelector: string) {
-  const bounds = element(nodeSelector).getBoundingClientRect()
-  const routeBounds = route.getBoundingClientRect()
-  return Math.max(0, Math.min(routeBounds.width - packet.offsetWidth, bounds.left + bounds.width / 2 - routeBounds.left - packet.offsetWidth / 2))
+  const node = element(nodeSelector)
+  return Math.max(0, Math.min(route.clientWidth - packet.offsetWidth, node.offsetLeft + node.offsetWidth / 2 - packet.offsetWidth / 2))
 }
 function positionPacket(nodeSelector: string) {
   packet.style.transform = `translateX(${point(nodeSelector)}px)`
@@ -120,6 +121,7 @@ function positionPacket(nodeSelector: string) {
 }
 function setEpisodePhase(phase: 'ready' | 'travel' | 'checking' | Outcome) {
   episodeStage.dataset.phase = phase
+  checkpoint.reflect(phase === 'ready' || phase === 'travel' ? 0 : phase === 'checking' ? 1 : 2)
   const step = phase === 'ready' ? '' : phase === 'travel' ? 'request' : phase === 'checking' ? 'check' : 'result'
   document.querySelectorAll<HTMLElement>('[data-progress]').forEach(item => {
     if (item.dataset.progress === step) item.setAttribute('aria-current', 'step')
@@ -159,6 +161,18 @@ function configureEpisode() {
   put('#proof-decision', JSON.stringify(decision, null, 2))
   put('#proof-policy', JSON.stringify({ mode: fixture.mode, ...fixture.policy }, null, 2))
 }
+function showCheckpointStep(step: number) {
+  stopPlayback()
+  if (step === 2) { finishEpisode(); return }
+  setEpisodePhase(step === 0 ? 'travel' : 'checking')
+  positionPacket(step === 0 ? '.node-agent' : '.node-cordon')
+  put('#episode-step', step === 0 ? '01 / ЗАПРОС АГЕНТА' : '02 / ПРОВЕРКА CORDON')
+  put('#gate-caption', step === 0 ? 'Проверяет по политике' : current().copy.gate)
+  put('#tool-caption', 'Ещё не вызван')
+  put('#episode-result', step === 0 ? 'Агент запрашивает действие' : 'Cordon сверяет запрос с политикой')
+  put('#episode-reason', step === 0 ? 'Пульт показывает запрос. Инструмент ещё не вызван.' : caseCopy[selectedCase].permissions)
+  playButton.textContent = t('Повторить проверку ↻')
+}
 function finishEpisode() {
   const { outcome, copy } = current()
   setEpisodePhase(outcome)
@@ -182,6 +196,7 @@ async function movePacket(from: number, to: number, duration: number, run: numbe
   return true
 }
 async function playEpisode(animate: boolean) {
+  checkpoint.chooseManually()
   stopPlayback()
   started = true
   configureEpisode()
@@ -216,7 +231,7 @@ document.querySelectorAll<HTMLButtonElement>('[data-case]').forEach(button => {
       item.classList.toggle('active', item === button)
       item.setAttribute('aria-pressed', String(item === button))
     })
-    void playEpisode(event.detail > 0)
+    void playEpisode(false)
     element('.case-brief').scrollIntoView({ behavior: paused || reduceMotion.matches || event.detail === 0 ? 'instant' : 'smooth', block: 'start' })
     if (event.detail === 0) {
       const title = element('#case-task')
@@ -237,7 +252,7 @@ document.querySelectorAll<HTMLButtonElement>('[data-branch]').forEach(button => 
     void playEpisode(event.detail > 0)
   })
 })
-playButton.addEventListener('click', () => { void playEpisode(true) })
+playButton.addEventListener('click', event => { void playEpisode(event.detail > 0) })
 document.querySelectorAll<HTMLButtonElement>('[data-case]').forEach(button => { const active = button.dataset.case === selectedCase; button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active)) })
 document.querySelectorAll<HTMLButtonElement>('[data-branch]').forEach(button => { const active = button.dataset.branch === selectedBranch; button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active)) })
 document.querySelector<HTMLButtonElement>(`[data-install="${restored.install}"]`)?.click()
@@ -254,6 +269,7 @@ function setMotion() {
   put('.motion-label', reduceMotion.matches ? 'Движение выключено в системе' : paused ? 'Включить анимацию' : 'Остановить анимацию')
   if (stopped) { heroImage.style.transform = 'none'; if (running) { stopPlayback(); finishEpisode() } }
   enhancements.refreshMotion()
+  checkpoint.refresh()
 }
 motionButton.addEventListener('click', () => { paused = !paused; setMotion() })
 reduceMotion.addEventListener('change', () => { paused = reduceMotion.matches; setMotion() })
@@ -266,7 +282,7 @@ function updateScroll() {
   pending = false
   const scroll = window.scrollY
   floatingNavigation.classList.toggle('visible', scroll > hero.offsetHeight * .65)
-  if (!paused && !reduceMotion.matches && scroll < hero.offsetHeight && window.innerWidth > 760) heroImage.style.transform = `translateY(${Math.min(scroll * .15, 95)}px) scale(1.045)`
+  // The checkpoint is the single authored motion sequence; keep the hero still.
   let active = ''
   navTargets.forEach(({ section }) => { if (section.getBoundingClientRect().top <= window.innerHeight * .4) active = section.id })
   navTargets.forEach(({ section, link }) => {
