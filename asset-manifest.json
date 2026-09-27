@@ -1,0 +1,47 @@
+[
+  {
+    "srcFromLocale": "../../assets/documents.webp",
+    "bytes": 207864,
+    "sha256": "960f94cb776f6f626c780b6f9d77ee7c9e2bd1a05fdecaeb80cee0ca6200198e"
+  },
+  {
+    "srcFromLocale": ".././assets/reviews.webp",
+    "bytes": 144832,
+    "sha256": "df211c94f3a16eb273e4e8593beb9fa32e9aa2c7d37c419b020c567b2c7de291"
+  },
+  {
+    "srcFromLocale": ".././assets/analytics.webp",
+    "bytes": 158718,
+    "sha256": "699c1ec8d5ff5bc37bac1418e4b2dbc8d01ecdb056d04207c0c8af488eb8fd64"
+  },
+  {
+    "srcFromLocale": ".././assets/files.webp",
+    "bytes": 135184,
+    "sha256": "3977a65f75bcc6dda447d798162ed1cc4cf55507692c33168cb2a765e406d57c"
+  },
+  {
+    "srcFromLocale": ".././assets/card-reviews.webp",
+    "bytes": 217046,
+    "sha256": "0f0052a193f624fcd14eaabd5a3451c25312c29f0de99bcf1e336df2cbef1021"
+  },
+  {
+    "srcFromLocale": ".././assets/card-analytics.webp",
+    "bytes": 257370,
+    "sha256": "697c9c315a65650de403c842539498f4ee5a011b8a50473f5397a90f14ebbba8"
+  },
+  {
+    "srcFromLocale": ".././assets/card-files.webp",
+    "bytes": 195860,
+    "sha256": "167660e867662afd5d8ab443e427220328949d5de387919601c33f0db4dfca7f"
+  },
+  {
+    "srcFromLocale": ".././assets/journey.webp",
+    "bytes": 157528,
+    "sha256": "822da3062e5298f86e2badffbfd9ea7c1b2930252a5cf8980321eeaad0965051"
+  },
+  {
+    "srcFromLocale": ".././assets/night-shift.webp",
+    "bytes": 220134,
+    "sha256": "9f054256ecc345d1a4edb615594449061c1e5c1da12d586c3064889e6f5ebd29"
+  }
+]

@@ -1,0 +1,40 @@
+{
+  "version": "0.11.0",
+  "results": [
+    {
+      "id": "reviews",
+      "normal": {
+        "kind": "allow"
+      },
+      "suspicious": {
+        "kind": "deny",
+        "rule": "certificate",
+        "reason": "outside the certificate: update, financial"
+      }
+    },
+    {
+      "id": "analytics",
+      "normal": {
+        "kind": "allow"
+      },
+      "suspicious": {
+        "kind": "ask",
+        "rule": "provenance",
+        "reason": "an untrusted fragment would be cut out of a call that leaves the machine; the value came from /demo/sales.csv, not from you; it is not sent with a piece cut out — read the whole draft and decide",
+        "source": "/demo/sales.csv"
+      }
+    },
+    {
+      "id": "files",
+      "normal": {
+        "kind": "allow"
+      },
+      "suspicious": {
+        "kind": "deny",
+        "rule": "certificate",
+        "reason": "outside the certificate: delete"
+      }
+    }
+  ],
+  "boundary": "Real Cordon gate decisions over synthetic fixtures with explicit custom policy mappings. No model, tool execution, live service, file operation, email delivery or end-to-end integration was tested."
+}
